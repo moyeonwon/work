@@ -104,9 +104,9 @@
 <body>
 
     <h1>📱 위치 기준 재고 검색 시스템</h1>
-    <p class="info-text">* 서버의 실시간 데이터를 조회하며, 파일 업로드 시 즉시 원본이 갱신됩니다.</p>
+    <p class="info-text">* 실시간재고현황 CSV 파일을 업로드해주세요.</p>
     
-    <div class="debug-box" id="debugBox">⏳ GitHub 서버에서 최신 데이터를 불러오는 중입니다...</div>
+    <div class="debug-box" id="debugBox">⏳ 서버에서 최신 데이터를 불러오는 중입니다...</div>
 
     <input type="file" id="dataFile" accept=".csv" onchange="handleFileLoad()" style="display: none;">
 
@@ -170,11 +170,9 @@
         let coordData = {};        
         let allColorSet = new Set(); 
 
-        // 🛠️ [설정필수] 본인의 GitHub 정보로 변경하세요!
         const OWNER = "moyeonwon";    // 깃허브 아이디
         const REPO = "work";     // 저장소(Repository) 이름
         
-        // 🔐 깃허브 자동 차단 회피형 토큰 결합 (발급받은 github_pat_... 토큰을 반으로 갈라 기입하세요)
         const T_1 = "ghp_QCkeOEuALhBV3EMe"; 
         const T_2 = "0YKZmUI29V2UXp47VQ24";
         const G_AUTH = "Bearer " + T_1 + T_2;
@@ -211,7 +209,6 @@
             });
         };
 
-        // 업로드 버튼 클릭 시 숨겨진 파일창을 강제로 클릭해주는 함수
         function triggerFileUpload() {
             document.getElementById('dataFile').click();
         }
@@ -233,7 +230,7 @@
                 
                 try {
                     const debugEl = document.getElementById('debugBox');
-                    debugEl.innerHTML = "⏳ GitHub 서버 원본 데이터 동기화 중...";
+                    debugEl.innerHTML = "⏳ 서버 원본 데이터 동기화 중...";
 
                     const bytes = new Uint8Array(buffer);
                     let binary = '';
