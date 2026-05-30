@@ -9,11 +9,6 @@
         h1 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
         .search-box { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        .upload-section { background: #ebf5fb; padding: 15px; border-radius: 8px; border: 1px dashed #3498db; margin-bottom: 20px; display: flex; align-items: center; }
-        .upload-group { display: flex; flex-direction: column; gap: 5px; }
-        .upload-group label { font-size: 13px; color: #2980b9; font-weight: bold; }
-        .upload-group input[type="file"] { font-size: 13px; }
-
         .search-row { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 15px; }
         .input-group { display: flex; flex-direction: column; }
         
@@ -21,6 +16,7 @@
         input, select { padding: 10px; width: 220px; border: 1px solid #ccd1d9; border-radius: 6px; font-size: 14px; box-sizing: border-box; background-color: #fff; }
         input:focus, select:focus { border-color: #3498db; outline: none; }
         
+        /* 버튼 그룹 스타일 정의 */
         .btn-group { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
         
         button { 
@@ -40,9 +36,10 @@
         .btn-search:hover { background-color: #2980b9; }
         .btn-reset { background-color: #95a5a6; }
         .btn-reset:hover { background-color: #7f8c8d; }
+        .btn-upload { background-color: #2ecc71; }
+        .btn-upload:hover { background-color: #27ae60; }
 
         @media screen and (max-width: 480px) {
-            .upload-section { padding: 12px; }
             .search-row { 
                 display: flex;
                 flex-wrap: nowrap; 
@@ -70,7 +67,7 @@
                 gap: 5px;          
             }
             button { 
-                width: 50%;     
+                width: 33.33%;     
                 padding: 10px 0;   
                 font-size: 11px;   
                 letter-spacing: -0.5px; 
@@ -111,12 +108,7 @@
     
     <div class="debug-box" id="debugBox">⏳ GitHub 서버에서 최신 데이터를 불러오는 중입니다...</div>
 
-    <div class="upload-section">
-        <div class="upload-group">
-            <label for="dataFile">서버 원본 파일 업데이트 (data.csv)</label>
-            <input type="file" id="dataFile" accept=".csv" onchange="handleFileLoad()">
-        </div>
-    </div>
+    <input type="file" id="dataFile" accept=".csv" onchange="handleFileLoad()" style="display: none;">
 
     <div class="search-box">
         <div class="search-row">
@@ -148,6 +140,7 @@
         <div class="btn-group">
             <button class="btn-search" onclick="searchData()">검색</button>
             <button class="btn-reset" onclick="resetForm()">초기화</button>
+            <button class="btn-upload" onclick="triggerFileUpload()">업로드</button>
         </div>
     </div>
 
@@ -178,16 +171,15 @@
         let allColorSet = new Set(); 
 
         // 🛠️ [설정필수] 본인의 GitHub 정보로 변경하세요!
-        const OWNER = "moyeonwon";    // 깃허브 아이디
-        const REPO = "work";     // 저장소(Repository) 이름
+        const OWNER = "YOUR_GITHUB_USERNAME";    // 깃허브 아이디
+        const REPO = "YOUR_REPOSITORY_NAME";     // 저장소(Repository) 이름
         
         // 🔐 깃허브 자동 차단 회피형 토큰 결합 (발급받은 github_pat_... 토큰을 반으로 갈라 기입하세요)
-        const T_1 = "ghp_QCkeOEuALhBV3E"; 
-        const T_2 = "Me0YKZmUI29V2UXp47VQ24";
+        const T_1 = "github_pat_이곳에첫부분"; 
+        const T_2 = "이곳에나머지부분";
         const G_AUTH = "Bearer " + T_1 + T_2;
 
         window.onload = function() {
-            // 1. coordinate.csv 로드 (캐시 방지를 위해 랜덤 쿼리 추가)
             fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/coordinate.csv?v=${Date.now()}`, {
                 headers: { "Authorization": G_AUTH, "Accept": "application/vnd.github.v3.raw" }
             })
@@ -198,8 +190,6 @@
             .then(buffer => {
                 const text = decodeBufferAuto(buffer);
                 parseCoordinateCSV(text);
-                
-                // 2. data.csv 로드
                 return fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/data.csv?v=${Date.now()}`, {
                     headers: { "Authorization": G_AUTH, "Accept": "application/vnd.github.v3.raw" }
                 });
@@ -221,6 +211,11 @@
             });
         };
 
+        // 업로드 버튼 클릭 시 숨겨진 파일창을 강제로 클릭해주는 함수
+        function triggerFileUpload() {
+            document.getElementById('dataFile').click();
+        }
+
         async function handleFileLoad() {
             const fileInput = document.getElementById('dataFile');
             const file = fileInput.files[0];
@@ -230,7 +225,6 @@
             reader.onload = async function(e) {
                 const buffer = e.target.result;
                 
-                // 화면 선반영
                 const text = decodeBufferAuto(buffer);
                 csvData = []; 
                 allColorSet.clear();
@@ -241,7 +235,6 @@
                     const debugEl = document.getElementById('debugBox');
                     debugEl.innerHTML = "⏳ GitHub 서버 원본 데이터 동기화 중...";
 
-                    // 바이너리를 Base64 문자열로 치환 (한글 깨짐 대응)
                     const bytes = new Uint8Array(buffer);
                     let binary = '';
                     for (let i = 0; i < bytes.byteLength; i++) {
@@ -251,7 +244,6 @@
 
                     const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data.csv`;
                     
-                    // [Step 1] GitHub에 현재 존재하는 파일의 SHA 식별값 받아오기
                     const getRes = await fetch(url, { headers: { "Authorization": G_AUTH } });
                     let sha = "";
                     if (getRes.ok) {
@@ -259,7 +251,6 @@
                         sha = fileInfo.sha;
                     }
 
-                    // [Step 2] PUT 요청으로 동기화 덮어쓰기
                     const putRes = await fetch(url, {
                         method: "PUT",
                         headers: { "Authorization": G_AUTH, "Content-Type": "application/json" },
@@ -445,6 +436,7 @@
             document.getElementById('baseLocationSearch').value = ''; document.getElementById('modelSearch').value = '';
             updateDropdown(""); updateColorDropdown(""); document.getElementById('resultBody').innerHTML = '';
             document.getElementById('tableContainer').style.display = 'none'; document.getElementById('noResult').style.display = 'none';
+            document.getElementById('dataFile').value = ''; // 파일 인풋도 비워줌
         }
     </script>
 </body>
