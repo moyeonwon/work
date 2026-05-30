@@ -9,6 +9,11 @@
         h1 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
         .search-box { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
+        .upload-section { background: #ebf5fb; padding: 15px; border-radius: 8px; border: 1px dashed #3498db; margin-bottom: 20px; display: flex; align-items: center; }
+        .upload-group { display: flex; flex-direction: column; gap: 5px; }
+        .upload-group label { font-size: 13px; color: #2980b9; font-weight: bold; }
+        .upload-group input[type="file"] { font-size: 13px; }
+
         .search-row { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 15px; }
         .input-group { display: flex; flex-direction: column; }
         
@@ -37,6 +42,7 @@
         .btn-reset:hover { background-color: #7f8c8d; }
 
         @media screen and (max-width: 480px) {
+            .upload-section { padding: 12px; }
             .search-row { 
                 display: flex;
                 flex-wrap: nowrap; 
@@ -104,6 +110,13 @@
     <p class="info-text">* 기본 탑재된 실시간 재고를 기반으로 조회합니다.</p>
     
     <div class="debug-box" id="debugBox">⏳ CSV 데이터를 불러오는 중입니다...</div>
+
+    <div class="upload-section">
+        <div class="upload-group">
+            <label for="dataFile">재고 데이터 파일 업로드 (data.csv)</label>
+            <input type="file" id="dataFile" accept=".csv" onchange="handleFileLoad()">
+        </div>
+    </div>
 
     <div class="search-box">
         <div class="search-row">
@@ -173,24 +186,32 @@
                 .then(buffer => {
                     const text = decodeBufferAuto(buffer);
                     parseCoordinateCSV(text);
-                    
-                    return fetch('data.csv');
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('data.csv 파일을 찾을 수 없습니다.');
-                    return response.arrayBuffer();
-                })
-                .then(buffer => {
-                    const text = decodeBufferAuto(buffer);
-                    parseDataCSV(text);
-                    
-                    updateColorDropdown("");
                     updateDebugStatus(); 
                 })
                 .catch(error => {
                     showErrorStatus(`기본 데이터 로드 실패: ${error.message}`);
                 });
         };
+
+        function handleFileLoad() {
+            const fileInput = document.getElementById('dataFile');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const buffer = e.target.result;
+                const text = decodeBufferAuto(buffer);
+                
+                csvData = []; 
+                allColorSet.clear();
+                parseDataCSV(text);
+                
+                updateColorDropdown("");
+                updateDebugStatus(); 
+            };
+            reader.readAsArrayBuffer(file);
+        }
 
         function decodeBufferAuto(buffer) {
             const bytes = new Uint8Array(buffer);
