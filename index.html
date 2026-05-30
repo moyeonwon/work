@@ -104,7 +104,7 @@
 <body>
 
     <h1>📱 위치 기준 재고 검색 시스템</h1>
-    <p class="info-text">* GitHub 서버의 실시간 데이터를 조회하며, 파일 업로드 시 즉시 원본이 갱신됩니다.</p>
+    <p class="info-text">* 서버의 실시간 데이터를 조회하며, 파일 업로드 시 즉시 원본이 갱신됩니다.</p>
     
     <div class="debug-box" id="debugBox">⏳ GitHub 서버에서 최신 데이터를 불러오는 중입니다...</div>
 
@@ -263,7 +263,7 @@
 
                     if (putRes.ok) {
                         updateDebugStatus();
-                        alert("✅ 서버 파일 교체 완료! 이제 누구나 변경된 재고로 조회됩니다.");
+                        alert("✅ 서버 파일 교체 완료! 변경된 재고로 조회됩니다.");
                     } else {
                         const errData = await putRes.json();
                         throw new Error(errData.message);
